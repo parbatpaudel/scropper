@@ -1,0 +1,49 @@
+# Ignore virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Exports (optional - uncomment if you want to ignore exports)
+# exports/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Chrome/Selenium
+chromedriver
+chromedriver.exe
+geckodriver
+geckodriver.exe
+
+# Logs
+*.log
+logs/
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Session files
+*.session
+*.session-journal
