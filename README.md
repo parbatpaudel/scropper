@@ -177,6 +177,27 @@ pip install webdriver-manager
 - Increase `SCRAPE_DELAY_SECONDS` in `.env`
 - Reduce `MAX_PAGES_TO_SCRAPE`
 
+## ☁️ Cloud Deployment
+
+### Deploy to Streamlit Cloud (Free!)
+
+1. **One-Click Deploy**
+   - Visit [share.streamlit.io](https://share.streamlit.io)
+   - Connect your GitHub account
+   - Select this repository
+   - Set main file to `app.py`
+   - Add your `GROQ_API_KEY` in the Secrets section
+
+2. **Your app will be live at:** `https://[your-app].streamlit.app`
+
+📖 **Detailed deployment guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for complete step-by-step instructions.
+
+### Important for Cloud Deployment
+- Add your API keys in Streamlit Cloud Secrets (not in `.env`)
+- Chromium is automatically installed via `packages.txt`
+- Free tier includes 1GB RAM - perfect for web scraping!
+
+
 ## 📄 License
 
 MIT License - feel free to use and modify!
