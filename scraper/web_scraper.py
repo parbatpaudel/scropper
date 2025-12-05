@@ -72,6 +72,11 @@ class SmartWebScraper:
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
         
+        # For Streamlit Cloud compatibility
+        chromium_path = "/usr/bin/chromium"
+        if os.path.exists(chromium_path):
+            options.binary_location = chromium_path
+        
         driver = webdriver.Chrome(options=options)
         driver.set_page_load_timeout(30)
         return driver
