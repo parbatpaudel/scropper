@@ -62,7 +62,7 @@ class SmartWebScraper:
         self.base_domain = ""
     
     def _create_driver(self):
-        """Create new browser instance"""
+        """Create new browser instance with optional proxy support"""
         options = Options()
         options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
@@ -71,6 +71,12 @@ class SmartWebScraper:
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+        
+        # Proxy support (if configured)
+        proxy_server = os.getenv("PROXY_SERVER")
+        if proxy_server:
+            options.add_argument(f"--proxy-server={proxy_server}")
+            print(f"  Using proxy: {proxy_server}")
         
         # For Streamlit Cloud compatibility
         chromium_path = "/usr/bin/chromium"
@@ -90,8 +96,26 @@ class SmartWebScraper:
                 pass
             self.driver = None
     
-    def _load_page(self, url: str) -> Optional[str]:
-        """Load a page and return HTML"""
+    def _load_page(self, url: str, use_proxy: bool = False) -> Optional[str]:
+        """Load a page and return HTML with smart proxy fallback"""
+        
+        # Try with Scrape.do if use_proxy=True
+        if use_proxy:
+            scrape_do_token = os.getenv("SCRAPE_DO_TOKEN")
+            if scrape_do_token:
+                try:
+                    print(f"  Loading with Scrape.do proxy: {url}")
+                    proxy_url = f"http://api.scrape.do?token={scrape_do_token}&url={url}"
+                    response = requests.get(proxy_url, timeout=30)
+                    if response.status_code == 200:
+                        print(f"  Got HTML via proxy: {len(response.text)} chars")
+                        return response.text
+                    else:
+                        print(f"  Proxy failed with status {response.status_code}")
+                except Exception as e:
+                    print(f"  Proxy error: {e}")
+        
+        # Regular Selenium scraping (default method)
         try:
             print(f"  Loading: {url}")
             self.driver.get(url)
@@ -115,7 +139,14 @@ class SmartWebScraper:
             return html
             
         except Exception as e:
-            print(f"  Error loading: {e}")
+            print(f"  Direct scraping failed: {e}")
+            
+            # Smart fallback - try with proxy if direct scraping failed
+            scrape_do_token = os.getenv("SCRAPE_DO_TOKEN")
+            if scrape_do_token and not use_proxy:
+                print(f"  Retrying with Scrape.do proxy...")
+                return self._load_page(url, use_proxy=True)
+            
             return None
     
     def _extract_text(self, html: str, url: str) -> tuple:
