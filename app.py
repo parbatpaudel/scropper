@@ -9,152 +9,181 @@ load_dotenv()
 if os.path.exists('.env.example'):
     load_dotenv('.env.example')
 
-st.set_page_config(page_title="WebScraper AI Pro", layout="wide")
+HERO_AVATAR = "https://api.dicebear.com/7.x/shapes/svg?seed=scraper&backgroundColor=667eea"
+st.set_page_config(page_title="AI Web Scraper Pro", layout="wide", page_icon=HERO_AVATAR)
 
 from scraper import SmartWebScraper, ScrapedPage, AIChat, is_groq_configured
 
-# ENHANCED UI WITH BETTER DROPDOWN HANDLING
+
+# CLEAN, MODERN UI WITH WHITE BACKGROUND
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     
-    /* Base Styles */
-    .block-container { 
-        padding-top: 2rem !important;
+    * {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    .block-container {
+        padding-top: 2.5rem !important;
         padding-bottom: 5rem !important;
-        max-width: 1200px !important;
+        max-width: 1100px !important;
     }
     
     header[data-testid="stHeader"] { display: none !important; }
     #MainMenu, footer { visibility: hidden; }
     
-    * { font-family: 'Inter', sans-serif; }
-    
-    /* Enhanced Background */
+    /* Clean White Background with Subtle Pattern */
     .stApp {
-        background: linear-gradient(135deg, #fff7ed 0%, #ffffff 50%, #fef2f2 100%);
-        background-attachment: fixed;
+        background: #fafafa;
     }
     
-    /* Hero Section */
-    .hero-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        margin-bottom: 3rem;
-        padding: 3rem 2rem;
-        background: rgba(255, 255, 255, 0.9);
+    /* Hero Section - Premium & Clean */
+    .hero-section {
+        position: relative;
+        background: #fff;
         border-radius: 24px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
+        padding: 3.5rem 2rem;
+        margin-bottom: 2.5rem;
+        border: 2px solid transparent;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        overflow: hidden;
+    }
+    .hero-section::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b, #3b82f6);
+        background-size: 300% 300%;
+        border-radius: 26px;
+        animation: gradientShift 4s ease infinite;
+        z-index: -1;
+    }
+    @keyframes gradientShift {
+        0%, 100% {background-position: 0% 50%;}
+        50% {background-position: 100% 50%;}
     }
     
-    .hero-badge {
+    .hero-header {
+        display: flex;
+        align-items: center;
+        gap: 2.5rem;
+    }
+    
+    .hero-avatar {
+        width: 90px;
+        height: 90px;
+        border-radius: 20px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease;
+    }
+    
+    .hero-avatar:hover {
+        transform: scale(1.05);
+    }
+    
+    .hero-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 20px;
+    }
+    
+    .hero-content {
+        flex: 1;
+    }
+    
+    .status-badge {
         display: inline-flex;
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
+        background: linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%);
+        border: 1.5px solid #86efac;
         border-radius: 100px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #15803d;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+    }
+    
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 10px rgba(251, 146, 60, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     
-    .hero-title {
-        font-size: 3.5rem !important;
-        font-weight: 800 !important;
-        letter-spacing: -0.03em !important;
-        line-height: 1.1 !important;
-        margin-bottom: 1.5rem !important;
-        background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .input-label {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #374151;
+        margin-bottom: 0.65rem;
+        display: block;
+        letter-spacing: 0.01em;
     }
     
-    .hero-title span {
-        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.25rem !important;
-        color: #64748b !important;
-        max-width: 700px;
-        margin: 0 auto !important;
-        line-height: 1.7 !important;
-        text-align: center !important;
-    }
-    
-    /* Enhanced Input Card */
-    .input-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.08);
-        margin-bottom: 3rem;
-    }
-    
-    /* Form Elements with Better Dropdown Handling */
-    .stTextInput input, .stNumberInput input, .stTextArea textarea {
-        background: white !important;
-        border: 1px solid #e2e8f0 !important;
+    /* Form Elements - Polished */
+    .stTextInput input, .stTextArea textarea, .stNumberInput input {
+        background: #fafafa !important;
+        border: 1.5px solid #e5e7eb !important;
         border-radius: 12px !important;
-        padding: 14px 16px !important;
-        font-size: 1rem !important;
-        color: #1e293b !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+        padding: 13px 18px !important;
+        font-size: 0.95rem !important;
+        color: #0f172a !important;
         transition: all 0.2s ease !important;
     }
     
-    .stTextInput input:focus, .stNumberInput input:focus, .stTextArea textarea:focus {
-        border-color: #f97316 !important;
-        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1) !important;
-    }
-    
-    /* Spinner Text - Black */
-    .stSpinner > div {
-        color: #000000 !important;
-    }
-    
-    .stSpinner > div > div {
-        border-top-color: #000000 !important;
-    }
-    
-    /* CUSTOM DROPDOWN STYLING */
-    .custom-selectbox {
-        position: relative;
-    }
-    
-    .custom-selectbox > div {
+    .stTextInput input:focus, .stTextArea textarea:focus {
         background: white !important;
-        border: 1px solid #e2e8f0 !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08) !important;
+    }
+    
+    
+    /* Selectbox - Fix visibility issues */
+    .stSelectbox > div > div {
+        background: #fafafa !important;
+        border: 1.5px solid #e5e7eb !important;
         border-radius: 12px !important;
-        padding: 14px 16px !important;
-        font-size: 1rem !important;
-        color: #1e293b !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+        padding: 10px 16px !important;
         transition: all 0.2s ease !important;
+        color: #0f172a !important;
     }
     
-    .custom-selectbox > div:hover {
-        border-color: #f97316 !important;
-        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1) !important;
+    /* Selected value text */
+    .stSelectbox div[data-baseweb="select"] > div {
+        color: #0f172a !important;
     }
     
-    .custom-selectbox > div:focus-within {
-        border-color: #f97316 !important;
-        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1) !important;
+    /* Dropdown options */
+    .stSelectbox [role="option"] {
+        background: #fff !important;
+        color: #0f172a !important;
     }
     
-    /* Buttons */
+    /* Selected option in dropdown */
+    .stSelectbox [aria-selected="true"] {
+        background: #eff6ff !important;
+        color: #1e40af !important;
+    }
+    
+    /* Hover state for options */
+    .stSelectbox [role="option"]:hover {
+        background: #f0f9ff !important;
+        color: #0f172a !important;
+    }
+    
+    .stSelectbox > div > div:hover,
+    .stSelectbox > div > div:focus-within {
+        background: white !important;
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08) !important;
+    }
+    
+    /* Premium Button */
     .stButton button {
-        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
         color: white !important;
         border: none !important;
         border-radius: 12px !important;
@@ -162,199 +191,368 @@ st.markdown("""
         font-weight: 600 !important;
         font-size: 1rem !important;
         width: 100% !important;
-        box-shadow: 0 10px 20px -5px rgba(249, 115, 22, 0.2) !important;
-        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3) !important;
+        transition: all 0.2s ease !important;
+        letter-spacing: 0.01em !important;
     }
     
     .stButton button:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 15px 30px -5px rgba(249, 115, 22, 0.3) !important;
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4) !important;
     }
     
-    /* Stats Cards */
+    .stButton button:active {
+        transform: translateY(0) !important;
+    }
+    
+    /* Stats Grid - Enhanced */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 1.5rem;
-        margin-bottom: 3rem;
+        margin-bottom: 2.5rem;
     }
     
     .stat-card {
         background: white;
-        padding: 1.75rem;
-        border-radius: 20px;
-        border: 1px solid #f1f5f9;
-        text-align: center;
+        padding: 2rem 1.75rem;
+        border-radius: 16px;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         transition: all 0.3s ease;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
     
     .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-        border-color: #fed7aa;
+        border-color: #3b82f6;
+        box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);
+        transform: translateY(-4px);
+    }
+    
+    .stat-card:hover::before {
+        opacity: 1;
+    }
+    
+    .stat-emoji {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+        display: block;
     }
     
     .stat-value {
         font-size: 2.5rem;
         font-weight: 800;
-        color: #1e293b;
-        margin-bottom: 0.25rem;
+        color: #0f172a;
+        margin-bottom: 0.35rem;
+        line-height: 1;
     }
     
     .stat-label {
-        font-size: 0.9rem;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: #94a3b8;
+        color: #6b7280;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
     
-    /* Chat Container */
+    /* Chat Container - Modern */
     .chat-container {
         background: white;
         border-radius: 20px;
-        border: 1px solid #f1f5f9;
+        border: 1px solid #e5e7eb;
         overflow: hidden;
-        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
     
     .chat-header {
-        padding: 1.5rem;
-        border-bottom: 1px solid #f1f5f9;
-        background: rgba(255,255,255,0.95);
-        backdrop-filter: blur(10px);
+        padding: 1.75rem 2rem;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        border-bottom: 1px solid #e5e7eb;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 1.25rem;
+    }
+    
+    .chat-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    .chat-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 12px;
+    }
+    
+    .chat-info {
+        flex: 1;
+    }
+    
+    .chat-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+    
+    .chat-subtitle {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 500;
     }
     
     .chat-messages {
-        height: 500px;
+        height: 520px;
         overflow-y: auto;
         padding: 2rem;
-        background: #f8fafc;
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
+        background: #fafafa;
     }
     
     .message {
         display: flex;
         gap: 1rem;
-        max-width: 85%;
-        animation: slideIn 0.3s ease;
+        margin-bottom: 1.75rem;
+        animation: fadeIn 0.3s ease;
     }
     
-    @keyframes slideIn {
+    @keyframes fadeIn {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
     
     .message.user {
-        align-self: flex-end;
         flex-direction: row-reverse;
     }
     
     .message-avatar {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         border-radius: 12px;
-        overflow: hidden;
         flex-shrink: 0;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        background: white;
-        padding: 2px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     }
     
     .message-avatar img {
         width: 100%;
         height: 100%;
-        border-radius: 10px;
+        border-radius: 12px;
     }
     
     .message-bubble {
-        padding: 1.25rem 1.5rem;
-        border-radius: 18px;
-        font-size: 1rem;
+        max-width: 70%;
+        padding: 1.15rem 1.5rem;
+        border-radius: 16px;
+        font-size: 0.95rem;
         line-height: 1.6;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     }
     
     .message.user .message-bubble {
-        background: #1e293b;
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         color: white;
         border-bottom-right-radius: 6px;
     }
     
     .message.ai .message-bubble {
         background: white;
-        color: #475569;
-        border: 1px solid #e2e8f0;
+        color: #374151;
+        border: 1px solid #e5e7eb;
         border-bottom-left-radius: 6px;
     }
     
-    /* Tabs */
+    /* Empty State - Beautiful */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-emoji {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        display: block;
+        opacity: 0.8;
+    }
+    
+    .empty-title {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.65rem;
+    }
+    
+    .empty-subtitle {
+        font-size: 1rem;
+        color: #6b7280;
+        line-height: 1.6;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    /* Tabs - Polished */
     .stTabs [data-baseweb="tab-list"] {
-        background: rgba(255,255,255,0.7);
-        padding: 8px;
-        border-radius: 16px;
-        border: 1px solid rgba(255,255,255,0.3);
-        gap: 8px;
+        background: white;
+        padding: 6px;
+        border-radius: 14px;
+        gap: 6px;
         margin-bottom: 2rem;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
     
     .stTabs [data-baseweb="tab"] {
-        border-radius: 12px;
+        border-radius: 10px;
         padding: 12px 24px;
         font-weight: 600;
-        color: #94a3b8;
+        color: #6b7280;
         background: transparent;
-        border: none;
+        font-size: 0.9rem;
         transition: all 0.2s ease;
     }
     
-    .stTabs [aria-selected="true"] {
-        background: white;
-        color: #f97316;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    .stTabs [data-baseweb="tab"]:hover {
+        background: #f9fafb;
+        color: #374151;
     }
     
-    /* Status Dot */
-    .status-dot {
+    .stTabs [aria-selected="true"] {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: white;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Progress Bar - Smooth */
+    .progress-container {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        margin-top: 2rem;
+        border: 1px solid #e5e7eb;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+    }
+    
+    .progress-label {
+        font-weight: 700;
+        color: #0f172a;
+        font-size: 1rem;
+    }
+    
+    .progress-percent {
+        font-weight: 800;
+        color: #3b82f6;
+        font-size: 1.25rem;
+    }
+    
+    .progress-bar {
+        background: #e5e7eb;
+        height: 10px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .progress-fill {
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        height: 100%;
+        transition: width 0.4s ease;
+        border-radius: 10px;
+    }
+    
+    .progress-url {
+        margin-top: 1.25rem;
+        font-size: 0.85rem;
+        color: #6b7280;
+        font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+        text-align: center;
+        padding: 0.75rem 1rem;
+        background: #f9fafb;
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+        font-weight: 500;
+    }
+    
+    /* Content Expander - Clean */
+    .streamlit-expanderHeader {
+        background: white !important;
+        border-radius: 12px !important;  
+        border: 1px solid #e5e7eb !important;
+        font-weight: 600 !important;
+        padding: 1rem 1.25rem !important;
+        font-size: 0.95rem !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    .streamlit-expanderHeader:hover {
+        border-color: #3b82f6 !important;
+        background: #f9fafb !important;
+    }
+    
+    /* Scrollbar - Clean */
+    ::-webkit-scrollbar {
         width: 10px;
         height: 10px;
-        border-radius: 50%;
-        display: inline-block;
-        margin-right: 8px;
     }
     
-    .status-active {
-        background: #22c55e;
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.1);
+    ::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 10px;
     }
     
-    .status-inactive {
-        background: #ef4444;
-        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
     }
     
-    /* Progress Bar */
-    .progress-container {
-        margin-top: 1.5rem;
-        padding: 1.5rem;
-        background: #f8fafc;
-        border-radius: 16px;
-        border: 1px solid #f1f5f9;
+    ::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    /* Success/Error Messages */
+    .stAlert {
+        border-radius: 12px !important;
+        border: none !important;
+        padding: 1rem 1.25rem !important;
+    }
+    
+    /* Slider */
+    .stSlider > div > div > div {
+        background: #3b82f6 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # DiceBear Avatars
-USER_AVATAR = "https://api.dicebear.com/7.x/lorelei/svg?seed=user&backgroundColor=f3f4f6"
-AI_AVATAR = "https://api.dicebear.com/7.x/bottts/svg?seed=ai&backgroundColor=fed7aa"
+HERO_AVATAR = "https://api.dicebear.com/7.x/shapes/svg?seed=scraper&backgroundColor=667eea"
+USER_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=user&backgroundColor=f3f4f6"
+AI_AVATAR = "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=ai&backgroundColor=e0e7ff"
+LINK_ICON = "https://api.dicebear.com/7.x/icons/svg?seed=link&icon=link"
+PAGES_ICON = "https://api.dicebear.com/7.x/icons/svg?seed=pages&icon=document"
+WORDS_ICON = "https://api.dicebear.com/7.x/icons/svg?seed=words&icon=text"
+TYPES_ICON = "https://api.dicebear.com/7.x/icons/svg?seed=types&icon=category"
 
-# Session
+# Session State
 if "pages" not in st.session_state:
     st.session_state.pages = {}
 if "content" not in st.session_state:
@@ -370,52 +568,58 @@ groq_ok = is_groq_configured()
 
 # Hero Section
 st.markdown(f'''
-<div class="hero-container">
-    <div class="hero-badge">
-        <span class="status-dot {'status-active' if groq_ok else 'status-inactive'}"></span>
-        <span style="font-weight: 600; font-size: 0.9rem; color: #9a3412;">
-            {'AI System Operational' if groq_ok else 'AI System Offline'}
-        </span>
+<div class="hero-section">
+    <div class="hero-header">
+        <div class="hero-avatar">
+            <img src="{HERO_AVATAR}" alt="Avatar">
+        </div>
+        <div class="hero-content">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                {'AI Powered & Ready' if groq_ok else 'Configure AI to Continue'}
+            </div>
+            <h1 class="hero-title">AI Web Scraper Pro</h1>
+            <p class="hero-subtitle">Transform any website into structured data with AI-powered intelligence. Extract, analyze, and export content from the web with unprecedented ease.</p>
+        </div>
     </div>
-    <h1 class="hero-title">Web<span>Scraper</span> AI Pro</h1>
-    <p class="hero-subtitle">Transform any website into structured data and intelligent conversations.<br>
-    Powered by advanced AI to understand context and meaning.</p>
 </div>
 ''', unsafe_allow_html=True)
 
-# Input Section - No extra card wrapper
+# Input Card
+st.markdown('<div class="input-card">', unsafe_allow_html=True)
 
 col1, col2 = st.columns([2, 1])
 
 with col1:
     mode = st.session_state.get('mode_select', "Single Page")
     
+    st.markdown('<div class="input-label">🔗 Target URL</div>', unsafe_allow_html=True)
     if mode == "Multiple URLs":
         urls_input = st.text_area(
-            "Target URLs (One per line)",
-            placeholder="https://example.com/page1\nhttps://example.com/page2",
-            height=120
+            "",
+            placeholder="https://example.com/page1\nhttps://example.com/page2\nhttps://example.com/page3",
+            height=120,
+            label_visibility="collapsed"
         )
     else:
-        url = st.text_input("Target URL", placeholder="https://example.com")
+        url = st.text_input("", placeholder="https://example.com", label_visibility="collapsed")
 
 with col2:
-    # Using a custom class for better dropdown styling
-    st.markdown('<label style="font-weight: 600; font-size: 0.9rem; color: #1e293b; margin-bottom: 0.5rem; display: block;">Extraction Mode</label>', unsafe_allow_html=True)
+    st.markdown('<div class="input-label">⚙️ Scraping Mode</div>', unsafe_allow_html=True)
     mode = st.selectbox(
-        "Extraction Mode",
+        "",
         ["Single Page", "Full Website", "Multiple URLs", "Quick Scan"],
         key="mode_select",
         label_visibility="collapsed"
     )
 
 if mode == "Full Website":
-    st.markdown('<div style="margin-top: 1rem;"></div>', unsafe_allow_html=True)
-    max_pages = st.slider("Maximum Pages", 5, 50, 10)
+    st.markdown('<div style="margin-top: 1.5rem;"></div>', unsafe_allow_html=True)
+    max_pages = st.slider("Maximum Pages to Scrape", 5, 50, 10)
 
 st.markdown('<div style="margin-top: 2rem;"></div>', unsafe_allow_html=True)
 
-if st.button("🚀 Start Extraction Process", use_container_width=True):
+if st.button("🚀 Start Scraping", use_container_width=True):
     if mode != "Multiple URLs" and not url:
         st.error("Please enter a valid URL")
     elif mode == "Multiple URLs" and not urls_input:
@@ -429,14 +633,14 @@ if st.button("🚀 Start Extraction Process", use_container_width=True):
         def update_progress(curr, count, total):
             progress_area.markdown(f'''
             <div class="progress-container">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem;">
-                    <span style="font-weight: 600; color: #000000;">Processing Content...</span>
-                    <span style="color: #f97316; font-weight: 600;">{int((count/total)*100)}%</span>
+                <div class="progress-header">
+                    <span class="progress-label">Processing Content...</span>
+                    <span class="progress-percent">{int((count/total)*100)}%</span>
                 </div>
-                <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
-                    <div style="background: linear-gradient(90deg, #f97316, #ea580c); height: 100%; width: {(count/total)*100}%; transition: width 0.5s ease;"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {(count/total)*100}%;"></div>
                 </div>
-                <div style="margin-top: 0.75rem; font-size: 0.9rem; color: #64748b; font-family: monospace; text-align: center;">{curr}</div>
+                <div class="progress-url">{curr}</div>
             </div>
             ''', unsafe_allow_html=True)
 
@@ -452,7 +656,8 @@ if st.button("🚀 Start Extraction Process", use_container_width=True):
                 st.session_state.content = scraper.get_all_content()
                 st.session_state.ai = AIChat(st.session_state.content) if groq_ok else None
                 progress_area.empty()
-                st.success(f"Successfully extracted {len(pages)} pages")
+                st.success(f"✅ Successfully extracted {len(pages)} pages")
+                st.rerun()
             except Exception as e:
                 st.error(f"Error: {str(e)}")
 
@@ -477,7 +682,8 @@ if st.button("🚀 Start Extraction Process", use_container_width=True):
                 st.session_state.content = "\n\n".join(all_content)
                 st.session_state.ai = AIChat(st.session_state.content) if groq_ok else None
                 progress_area.empty()
-                st.success(f"Successfully extracted {len(st.session_state.pages)} pages")
+                st.success(f"✅ Successfully extracted {len(st.session_state.pages)} pages")
+                st.rerun()
 
         elif mode == "Single Page":
             with st.spinner("Extracting content..."):
@@ -488,7 +694,8 @@ if st.button("🚀 Start Extraction Process", use_container_width=True):
                         st.session_state.pages = {url: page}
                         st.session_state.content = page.content
                         st.session_state.ai = AIChat(page.content) if groq_ok else None
-                        st.success("Extraction complete")
+                        st.success("✅ Extraction complete")
+                        st.rerun()
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
         
@@ -516,13 +723,14 @@ if st.button("🚀 Start Extraction Process", use_container_width=True):
                     st.session_state.pages = {url: page}
                     st.session_state.content = content
                     st.session_state.ai = AIChat(content) if groq_ok else None
-                    st.success("Scan complete")
+                    st.success("✅ Scan complete")
+                    st.rerun()
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
+st.markdown('</div>', unsafe_allow_html=True)
 
-
-# Results
+# Results Section
 if st.session_state.pages:
     pages = list(st.session_state.pages.values())
     
@@ -533,6 +741,7 @@ if st.session_state.pages:
     with col1:
         st.markdown(f'''
         <div class="stat-card">
+            <span class="stat-emoji">📄</span>
             <div class="stat-value">{len(pages)}</div>
             <div class="stat-label">Pages Extracted</div>
         </div>
@@ -541,6 +750,7 @@ if st.session_state.pages:
     with col2:
         st.markdown(f'''
         <div class="stat-card">
+            <span class="stat-emoji">📝</span>
             <div class="stat-value">{sum(p.word_count for p in pages):,}</div>
             <div class="stat-label">Total Words</div>
         </div>
@@ -549,6 +759,7 @@ if st.session_state.pages:
     with col3:
         st.markdown(f'''
         <div class="stat-card">
+            <span class="stat-emoji">🏷️</span>
             <div class="stat-value">{len(set(p.content_type for p in pages))}</div>
             <div class="stat-label">Content Types</div>
         </div>
@@ -560,16 +771,17 @@ if st.session_state.pages:
     
     with tab1:
         if groq_ok:
-            st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-            
-            # Chat Header
             st.markdown(f'''
-            <div class="chat-header">
-                <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 0 3px rgba(34,197,94,0.2);"></div>
-                <span style="font-weight: 600; color: #1e293b;">AI Assistant Online</span>
-        <img src="{AI_AVATAR}" style="width:24px;height:24px;border-radius:50%;margin-left:8px;" alt="AI Avatar"/>
-                <span style="margin-left: auto; font-size: 0.85rem; color: #94a3b8; background: #f1f5f9; padding: 4px 12px; border-radius: 100px;">{os.getenv("GROQ_MODEL", "mixtral-8x7b-32768")}</span>
-            </div>
+            <div class="chat-container">
+                <div class="chat-header">
+                    <div class="chat-avatar">
+                        <img src="{AI_AVATAR}">
+                    </div>
+                    <div>
+                        <div class="chat-title">AI Assistant</div>
+                        <div class="chat-subtitle">Powered by {os.getenv("GROQ_MODEL", "mixtral-8x7b-32768")}</div>
+                    </div>
+                </div>
             ''', unsafe_allow_html=True)
             
             # Messages
@@ -590,12 +802,10 @@ if st.session_state.pages:
                         </div>'''
             else:
                 msgs_html = f'''
-                <div style="text-align: center; padding: 4rem 2rem;">
-                    <div style="width: 72px; height: 72px; background: #fff7ed; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 10px 25px rgba(251, 146, 60, 0.1);">
-                        <span style="font-size: 2.5rem;">🤖</span>
-                    </div>
-                    <h3 style="color: #1e293b; font-weight: 700; margin-bottom: 0.75rem;">AI Assistant Ready</h3>
-                    <p style="color: #94a3b8; margin: 0; font-size: 1.1rem;">Ask me anything about the extracted content.</p>
+                <div class="empty-state">
+                    <span class="empty-emoji">🤖</span>
+                    <div class="empty-title">Ready to Help!</div>
+                    <div class="empty-subtitle">Ask me anything about the scraped content. I can analyze, summarize, or extract specific information for you.</div>
                 </div>
                 '''
             
@@ -606,7 +816,7 @@ if st.session_state.pages:
             col1, col2 = st.columns([5, 1])
             
             with col1:
-                msg = st.text_input("", placeholder="Ask a question about the content...", label_visibility="collapsed")
+                msg = st.text_input("", placeholder="Ask a question about the content...", label_visibility="collapsed", key="chat_input")
             
             with col2:
                 send = st.button("Send", use_container_width=True)
@@ -623,24 +833,24 @@ if st.session_state.pages:
                 
                 st.rerun()
             
-            if st.button("🧹 Clear Chat History", use_container_width=True):
+            if st.button("🧹 Clear Chat", use_container_width=True):
                 st.session_state.chat = []
                 if st.session_state.ai:
                     st.session_state.ai.clear()
                 st.rerun()
                 
         else:
-            st.warning("⚠️ Configure GROQ_API_KEY in your .env file to enable AI features")
+            st.warning("⚠️ Configure GROQ_API_KEY in your environment to enable AI features")
     
     with tab2:
-        st.subheader("Extracted Content")
+        st.subheader("📄 Extracted Content")
         for page in sorted(pages, key=lambda x: x.value_score, reverse=True):
             with st.expander(f"📄 {page.title} ({page.word_count} words)"):
                 st.caption(f"🔗 {page.url}")
-                st.text_area("", page.content[:3000], height=200, label_visibility="collapsed")
+                st.text_area("", page.content[:3000], height=200, label_visibility="collapsed", key=f"content_{page.url}")
     
     with tab3:
-        st.subheader("Export Options")
+        st.subheader("💾 Export Options")
         col1, col2 = st.columns(2)
         
         with col1:
@@ -649,20 +859,20 @@ if st.session_state.pages:
         with col2:
             fname = st.text_input("Filename", "web_scrape_export")
         
-        if st.button("📥 Download Exported Data", use_container_width=True):
+        if st.button("📥 Download", use_container_width=True):
             if fmt == "JSON":
                 data = {"pages": [{"url": p.url, "title": p.title, "content": p.content, "word_count": p.word_count} for p in pages]}
                 st.download_button(
-                    "💾 Save JSON File",
+                    "💾 Save JSON",
                     json.dumps(data, indent=2),
                     f"{fname}.json",
                     "application/json",
                     use_container_width=True
                 )
             elif fmt == "Markdown":
-                md = "\n\n---\n\n".join([f"# {p.title}\n\n**URL:** {p.url}\n\n**Word Count:** {p.word_count}\n\n{p.content}" for p in pages])
+                md = "\n\n---\n\n".join([f"# {p.title}\n\n**URL:** {p.url}\n\n**Words:** {p.word_count}\n\n{p.content}" for p in pages])
                 st.download_button(
-                    "💾 Save Markdown File",
+                    "💾 Save Markdown",
                     md,
                     f"{fname}.md",
                     "text/markdown",
@@ -670,7 +880,7 @@ if st.session_state.pages:
                 )
             else:
                 st.download_button(
-                    "💾 Save Text File",
+                    "💾 Save Text",
                     st.session_state.content,
                     f"{fname}.txt",
                     "text/plain",
