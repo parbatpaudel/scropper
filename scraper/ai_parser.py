@@ -6,7 +6,7 @@ import os
 from typing import List, Dict
 from dotenv import load_dotenv
 
-# Load env
+# Load env for local development
 if os.path.exists('.env'):
     load_dotenv('.env')
 elif os.path.exists('.env.example'):
@@ -14,10 +14,23 @@ elif os.path.exists('.env.example'):
 else:
     load_dotenv()
 
-# Config - using mixtral which is stable
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "mixtral-8x7b-32768")
-SUPERMEMORY_API_KEY = os.getenv("SUPERMEMORY_API_KEY")
+# Config - Check Streamlit secrets first, then environment variables
+def get_config(key: str, default: str = "") -> str:
+    """Get config from st.secrets (Streamlit Cloud) or environment variables (local)"""
+    try:
+        import streamlit as st
+        # Try Streamlit secrets first (for cloud deployment)
+        if hasattr(st, 'secrets') and key in st.secrets:
+            return st.secrets[key]
+    except:
+        pass
+    # Fallback to environment variables (for local development)
+    return os.getenv(key, default)
+
+GROQ_API_KEY = get_config("GROQ_API_KEY")
+GROQ_MODEL = get_config("GROQ_MODEL", "mixtral-8x7b-32768")
+SUPERMEMORY_API_KEY = get_config("SUPERMEMORY_API_KEY")
+
 
 
 class GroqProvider:
